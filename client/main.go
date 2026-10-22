@@ -89,6 +89,36 @@ func main() {
 
 	fmt.Println("You are connected. Press Ctrl+C to exit.")
 
+	fmt.Println("Type /leave to leave Chit Chat.")
+
+	go func() {
+		for {
+			input, err := reader.ReadString('\n')
+			if err != nil {
+				return
+			}
+
+			command := strings.TrimSpace(input)
+
+			if command == "/leave" {
+				err := stream.Send(&pb.ClientRequest{
+					Request: &pb.ClientRequest_Leave{
+						Leave: &pb.LeaveRequest{},
+					},
+				})
+				if err != nil {
+					logger.Printf(
+						"event=leave_request_failed client_id=%s error=%v",
+						clientID, err,
+					)
+				}
+				return
+			}
+
+			fmt.Println("Chat publishing isn't implemented yet. Type /leave to exit.")
+		}
+	}()
+
 	// Keep receiving server events.
 	for {
 		event, err := stream.Recv()

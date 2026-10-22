@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"syscall"
 
@@ -18,10 +19,43 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type participant struct {
+	id          string
+	displayName string
+	outgoing    chan *pb.ServerEvent
+}
+
 type chatServer struct {
 	pb.UnimplementedChitChatServer
-	logger *log.Logger
-	nextID atomic.Uint64
+	logger       *log.Logger
+	nextID       atomic.Uint64
+	mu           sync.Mutex
+	participants map[string]*participant
+	logicalClock uint64
+}
+
+func (s *chatServer) broadcast(event *pb.ServerEvent) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for _, p := range s.participants {
+		select {
+		case p.outgoing <- event:
+		default:
+			s.logger.Printf(
+				"event=broadcast_queue_full client_id=%s",
+				p.id,
+			)
+		}
+	}
+}
+
+func (s *chatServer) tick() uint64 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.logicalClock++
+	return s.logicalClock
 }
 
 func (s *chatServer) Connect(
@@ -46,6 +80,16 @@ func (s *chatServer) Connect(
 	// Assign a unique ID to this participant.
 	id := fmt.Sprintf("client-%d", s.nextID.Add(1))
 
+	p := &participant{
+		id:          id,
+		displayName: displayName,
+		outgoing:    make(chan *pb.ServerEvent, 16),
+	}
+
+	s.mu.Lock()
+	s.participants[id] = p
+	s.mu.Unlock()
+
 	s.logger.Printf(
 		"event=client_connected client_id=%s display_name=%q",
 		id, displayName,
@@ -67,6 +111,39 @@ func (s *chatServer) Connect(
 
 	s.logger.Printf("event=join_confirmed client_id=%s", id)
 
+	joinTime := s.tick()
+
+	joinEvent := &pb.ServerEvent{
+		Event: &pb.ServerEvent_Broadcast{
+			Broadcast: &pb.Broadcast{
+				Content:          fmt.Sprintf("Participant %s joined Chit Chat at logical time %d", displayName, joinTime),
+				LogicalTimestamp: int64(joinTime),
+				ParticipantId:    id,
+				DisplayName:      displayName,
+				EventType:        pb.EventType_EVENT_TYPE_JOIN,
+			},
+		},
+	}
+
+	s.broadcast(joinEvent)
+
+	s.logger.Printf(
+		"event=join_broadcast client_id=%s logical_timestamp=%d",
+		id, joinTime,
+	)
+
+	go func() {
+		for event := range p.outgoing {
+			if err := stream.Send(event); err != nil {
+				s.logger.Printf(
+					"event=message_delivery_failed client_id=%s error=%v",
+					id, err,
+				)
+				return
+			}
+		}
+	}()
+
 	// Keep the connection open until the client disconnects or leaves.
 	for {
 		req, err := stream.Recv()
@@ -86,7 +163,35 @@ func (s *chatServer) Connect(
 
 		switch {
 		case req.GetLeave() != nil:
-			s.logger.Printf("event=client_left client_id=%s", id)
+			s.mu.Lock()
+			delete(s.participants, id)
+			s.mu.Unlock()
+
+			leaveTime := s.tick()
+
+			leaveEvent := &pb.ServerEvent{
+				Event: &pb.ServerEvent_Broadcast{
+					Broadcast: &pb.Broadcast{
+						Content: fmt.Sprintf(
+							"Participant %s left Chit Chat at logical time %d",
+							displayName,
+							leaveTime,
+						),
+						LogicalTimestamp: int64(leaveTime),
+						ParticipantId:    id,
+						DisplayName:      displayName,
+						EventType:        pb.EventType_EVENT_TYPE_LEAVE,
+					},
+				},
+			}
+
+			s.broadcast(leaveEvent)
+
+			s.logger.Printf(
+				"event=leave_broadcast client_id=%s logical_timestamp=%d",
+				id,
+				leaveTime,
+			)
 			return nil
 
 		case req.GetPublish() != nil:
@@ -130,7 +235,10 @@ func main() {
 	}
 
 	server := grpc.NewServer()
-	implementation := &chatServer{logger: logger}
+	implementation := &chatServer{
+		logger:       logger,
+		participants: make(map[string]*participant),
+	}
 
 	pb.RegisterChitChatServer(server, implementation)
 
