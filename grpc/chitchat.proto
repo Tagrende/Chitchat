@@ -1,0 +1,63 @@
+
+syntax = "proto3";
+
+package chitchat;
+
+option go_package = "chitchat/grpc;grpc";
+
+service ChitChat {
+  rpc Connect(stream ClientRequest)
+      returns (stream ServerEvent);
+}
+
+message ClientRequest {
+  oneof request {
+    JoinRequest join = 1;
+    PublishRequest publish = 2;
+    LeaveRequest leave = 3;
+  }
+}
+
+message JoinRequest {
+  string participant_name = 1;
+}
+
+message PublishRequest {
+  string content = 1;
+}
+
+message LeaveRequest {
+  // The server identifies the participant
+  // through the established connection.
+}
+
+message ServerEvent {
+  string content = 1;
+  int64 logical_timestamp = 2;
+  string participant_id = 3;
+
+  EventType event_type = 4;
+}
+
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_JOIN = 1;
+  EVENT_TYPE_CHAT = 2;
+  EVENT_TYPE_LEAVE = 3;
+}
+
+// INFO:
+
+// Connect	Opens a long-lived, two-way stream for each client.
+
+// ClientRequest	Carries a join, publish, or leave action.
+
+// oneof request	Prevents a single request from containing multiple actions simultaneously.
+
+// ServerEvent	Represents a broadcast event sent from the server to clients.
+
+// logical_timestamp	Carries the server-assigned Lamport timestamp.
+
+// participant_id	Identifies the participant associated with the event.
+
+// EventType	Distinguishes join, chat, and leave events.
