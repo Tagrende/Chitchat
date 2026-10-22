@@ -172,10 +172,10 @@ func (*ClientRequest_Publish) isClientRequest_Request() {}
 func (*ClientRequest_Leave) isClientRequest_Request() {}
 
 type JoinRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	ParticipantName string                 `protobuf:"bytes,1,opt,name=participant_name,json=participantName,proto3" json:"participant_name,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DisplayName   string                 `protobuf:"bytes,1,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *JoinRequest) Reset() {
@@ -208,9 +208,9 @@ func (*JoinRequest) Descriptor() ([]byte, []int) {
 	return file_grpc_chitchat_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *JoinRequest) GetParticipantName() string {
+func (x *JoinRequest) GetDisplayName() string {
 	if x != nil {
-		return x.ParticipantName
+		return x.DisplayName
 	}
 	return ""
 }
@@ -296,13 +296,15 @@ func (*LeaveRequest) Descriptor() ([]byte, []int) {
 }
 
 type ServerEvent struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	Content          string                 `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
-	LogicalTimestamp int64                  `protobuf:"varint,2,opt,name=logical_timestamp,json=logicalTimestamp,proto3" json:"logical_timestamp,omitempty"`
-	ParticipantId    string                 `protobuf:"bytes,3,opt,name=participant_id,json=participantId,proto3" json:"participant_id,omitempty"`
-	EventType        EventType              `protobuf:"varint,4,opt,name=event_type,json=eventType,proto3,enum=chitchat.EventType" json:"event_type,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Event:
+	//
+	//	*ServerEvent_JoinConfirmation
+	//	*ServerEvent_Broadcast
+	//	*ServerEvent_Error
+	Event         isServerEvent_Event `protobuf_oneof:"event"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ServerEvent) Reset() {
@@ -335,32 +337,232 @@ func (*ServerEvent) Descriptor() ([]byte, []int) {
 	return file_grpc_chitchat_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *ServerEvent) GetContent() string {
+func (x *ServerEvent) GetEvent() isServerEvent_Event {
 	if x != nil {
-		return x.Content
+		return x.Event
 	}
-	return ""
+	return nil
 }
 
-func (x *ServerEvent) GetLogicalTimestamp() int64 {
+func (x *ServerEvent) GetJoinConfirmation() *JoinConfirmation {
 	if x != nil {
-		return x.LogicalTimestamp
+		if x, ok := x.Event.(*ServerEvent_JoinConfirmation); ok {
+			return x.JoinConfirmation
+		}
 	}
-	return 0
+	return nil
 }
 
-func (x *ServerEvent) GetParticipantId() string {
+func (x *ServerEvent) GetBroadcast() *Broadcast {
+	if x != nil {
+		if x, ok := x.Event.(*ServerEvent_Broadcast); ok {
+			return x.Broadcast
+		}
+	}
+	return nil
+}
+
+func (x *ServerEvent) GetError() *ErrorResponse {
+	if x != nil {
+		if x, ok := x.Event.(*ServerEvent_Error); ok {
+			return x.Error
+		}
+	}
+	return nil
+}
+
+type isServerEvent_Event interface {
+	isServerEvent_Event()
+}
+
+type ServerEvent_JoinConfirmation struct {
+	JoinConfirmation *JoinConfirmation `protobuf:"bytes,1,opt,name=join_confirmation,json=joinConfirmation,proto3,oneof"`
+}
+
+type ServerEvent_Broadcast struct {
+	Broadcast *Broadcast `protobuf:"bytes,2,opt,name=broadcast,proto3,oneof"`
+}
+
+type ServerEvent_Error struct {
+	Error *ErrorResponse `protobuf:"bytes,3,opt,name=error,proto3,oneof"`
+}
+
+func (*ServerEvent_JoinConfirmation) isServerEvent_Event() {}
+
+func (*ServerEvent_Broadcast) isServerEvent_Event() {}
+
+func (*ServerEvent_Error) isServerEvent_Event() {}
+
+type JoinConfirmation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ParticipantId string                 `protobuf:"bytes,1,opt,name=participant_id,json=participantId,proto3" json:"participant_id,omitempty"`
+	DisplayName   string                 `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *JoinConfirmation) Reset() {
+	*x = JoinConfirmation{}
+	mi := &file_grpc_chitchat_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JoinConfirmation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JoinConfirmation) ProtoMessage() {}
+
+func (x *JoinConfirmation) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_chitchat_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JoinConfirmation.ProtoReflect.Descriptor instead.
+func (*JoinConfirmation) Descriptor() ([]byte, []int) {
+	return file_grpc_chitchat_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *JoinConfirmation) GetParticipantId() string {
 	if x != nil {
 		return x.ParticipantId
 	}
 	return ""
 }
 
-func (x *ServerEvent) GetEventType() EventType {
+func (x *JoinConfirmation) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+type Broadcast struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Content          string                 `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
+	LogicalTimestamp int64                  `protobuf:"varint,2,opt,name=logical_timestamp,json=logicalTimestamp,proto3" json:"logical_timestamp,omitempty"`
+	ParticipantId    string                 `protobuf:"bytes,3,opt,name=participant_id,json=participantId,proto3" json:"participant_id,omitempty"`
+	DisplayName      string                 `protobuf:"bytes,4,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	EventType        EventType              `protobuf:"varint,5,opt,name=event_type,json=eventType,proto3,enum=chitchat.EventType" json:"event_type,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *Broadcast) Reset() {
+	*x = Broadcast{}
+	mi := &file_grpc_chitchat_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Broadcast) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Broadcast) ProtoMessage() {}
+
+func (x *Broadcast) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_chitchat_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Broadcast.ProtoReflect.Descriptor instead.
+func (*Broadcast) Descriptor() ([]byte, []int) {
+	return file_grpc_chitchat_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *Broadcast) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *Broadcast) GetLogicalTimestamp() int64 {
+	if x != nil {
+		return x.LogicalTimestamp
+	}
+	return 0
+}
+
+func (x *Broadcast) GetParticipantId() string {
+	if x != nil {
+		return x.ParticipantId
+	}
+	return ""
+}
+
+func (x *Broadcast) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+func (x *Broadcast) GetEventType() EventType {
 	if x != nil {
 		return x.EventType
 	}
 	return EventType_EVENT_TYPE_UNSPECIFIED
+}
+
+type ErrorResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ErrorResponse) Reset() {
+	*x = ErrorResponse{}
+	mi := &file_grpc_chitchat_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ErrorResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ErrorResponse) ProtoMessage() {}
+
+func (x *ErrorResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_chitchat_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ErrorResponse.ProtoReflect.Descriptor instead.
+func (*ErrorResponse) Descriptor() ([]byte, []int) {
+	return file_grpc_chitchat_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *ErrorResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
 }
 
 var File_grpc_chitchat_proto protoreflect.FileDescriptor
@@ -372,18 +574,29 @@ const file_grpc_chitchat_proto_rawDesc = "" +
 	"\x04join\x18\x01 \x01(\v2\x15.chitchat.JoinRequestH\x00R\x04join\x124\n" +
 	"\apublish\x18\x02 \x01(\v2\x18.chitchat.PublishRequestH\x00R\apublish\x12.\n" +
 	"\x05leave\x18\x03 \x01(\v2\x16.chitchat.LeaveRequestH\x00R\x05leaveB\t\n" +
-	"\arequest\"8\n" +
-	"\vJoinRequest\x12)\n" +
-	"\x10participant_name\x18\x01 \x01(\tR\x0fparticipantName\"*\n" +
+	"\arequest\"0\n" +
+	"\vJoinRequest\x12!\n" +
+	"\fdisplay_name\x18\x01 \x01(\tR\vdisplayName\"*\n" +
 	"\x0ePublishRequest\x12\x18\n" +
 	"\acontent\x18\x01 \x01(\tR\acontent\"\x0e\n" +
-	"\fLeaveRequest\"\xaf\x01\n" +
-	"\vServerEvent\x12\x18\n" +
+	"\fLeaveRequest\"\xc7\x01\n" +
+	"\vServerEvent\x12I\n" +
+	"\x11join_confirmation\x18\x01 \x01(\v2\x1a.chitchat.JoinConfirmationH\x00R\x10joinConfirmation\x123\n" +
+	"\tbroadcast\x18\x02 \x01(\v2\x13.chitchat.BroadcastH\x00R\tbroadcast\x12/\n" +
+	"\x05error\x18\x03 \x01(\v2\x17.chitchat.ErrorResponseH\x00R\x05errorB\a\n" +
+	"\x05event\"\\\n" +
+	"\x10JoinConfirmation\x12%\n" +
+	"\x0eparticipant_id\x18\x01 \x01(\tR\rparticipantId\x12!\n" +
+	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\"\xd0\x01\n" +
+	"\tBroadcast\x12\x18\n" +
 	"\acontent\x18\x01 \x01(\tR\acontent\x12+\n" +
 	"\x11logical_timestamp\x18\x02 \x01(\x03R\x10logicalTimestamp\x12%\n" +
-	"\x0eparticipant_id\x18\x03 \x01(\tR\rparticipantId\x122\n" +
+	"\x0eparticipant_id\x18\x03 \x01(\tR\rparticipantId\x12!\n" +
+	"\fdisplay_name\x18\x04 \x01(\tR\vdisplayName\x122\n" +
 	"\n" +
-	"event_type\x18\x04 \x01(\x0e2\x13.chitchat.EventTypeR\teventType*g\n" +
+	"event_type\x18\x05 \x01(\x0e2\x13.chitchat.EventTypeR\teventType\")\n" +
+	"\rErrorResponse\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage*g\n" +
 	"\tEventType\x12\x1a\n" +
 	"\x16EVENT_TYPE_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fEVENT_TYPE_JOIN\x10\x01\x12\x13\n" +
@@ -405,27 +618,33 @@ func file_grpc_chitchat_proto_rawDescGZIP() []byte {
 }
 
 var file_grpc_chitchat_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_grpc_chitchat_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_grpc_chitchat_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_grpc_chitchat_proto_goTypes = []any{
-	(EventType)(0),         // 0: chitchat.EventType
-	(*ClientRequest)(nil),  // 1: chitchat.ClientRequest
-	(*JoinRequest)(nil),    // 2: chitchat.JoinRequest
-	(*PublishRequest)(nil), // 3: chitchat.PublishRequest
-	(*LeaveRequest)(nil),   // 4: chitchat.LeaveRequest
-	(*ServerEvent)(nil),    // 5: chitchat.ServerEvent
+	(EventType)(0),           // 0: chitchat.EventType
+	(*ClientRequest)(nil),    // 1: chitchat.ClientRequest
+	(*JoinRequest)(nil),      // 2: chitchat.JoinRequest
+	(*PublishRequest)(nil),   // 3: chitchat.PublishRequest
+	(*LeaveRequest)(nil),     // 4: chitchat.LeaveRequest
+	(*ServerEvent)(nil),      // 5: chitchat.ServerEvent
+	(*JoinConfirmation)(nil), // 6: chitchat.JoinConfirmation
+	(*Broadcast)(nil),        // 7: chitchat.Broadcast
+	(*ErrorResponse)(nil),    // 8: chitchat.ErrorResponse
 }
 var file_grpc_chitchat_proto_depIdxs = []int32{
 	2, // 0: chitchat.ClientRequest.join:type_name -> chitchat.JoinRequest
 	3, // 1: chitchat.ClientRequest.publish:type_name -> chitchat.PublishRequest
 	4, // 2: chitchat.ClientRequest.leave:type_name -> chitchat.LeaveRequest
-	0, // 3: chitchat.ServerEvent.event_type:type_name -> chitchat.EventType
-	1, // 4: chitchat.ChitChat.Connect:input_type -> chitchat.ClientRequest
-	5, // 5: chitchat.ChitChat.Connect:output_type -> chitchat.ServerEvent
-	5, // [5:6] is the sub-list for method output_type
-	4, // [4:5] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	6, // 3: chitchat.ServerEvent.join_confirmation:type_name -> chitchat.JoinConfirmation
+	7, // 4: chitchat.ServerEvent.broadcast:type_name -> chitchat.Broadcast
+	8, // 5: chitchat.ServerEvent.error:type_name -> chitchat.ErrorResponse
+	0, // 6: chitchat.Broadcast.event_type:type_name -> chitchat.EventType
+	1, // 7: chitchat.ChitChat.Connect:input_type -> chitchat.ClientRequest
+	5, // 8: chitchat.ChitChat.Connect:output_type -> chitchat.ServerEvent
+	8, // [8:9] is the sub-list for method output_type
+	7, // [7:8] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_grpc_chitchat_proto_init() }
@@ -438,13 +657,18 @@ func file_grpc_chitchat_proto_init() {
 		(*ClientRequest_Publish)(nil),
 		(*ClientRequest_Leave)(nil),
 	}
+	file_grpc_chitchat_proto_msgTypes[4].OneofWrappers = []any{
+		(*ServerEvent_JoinConfirmation)(nil),
+		(*ServerEvent_Broadcast)(nil),
+		(*ServerEvent_Error)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_grpc_chitchat_proto_rawDesc), len(file_grpc_chitchat_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   5,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -19,7 +19,7 @@ message ClientRequest {
 }
 
 message JoinRequest {
-  string participant_name = 1;
+  string display_name = 1;
 }
 
 message PublishRequest {
@@ -27,16 +27,31 @@ message PublishRequest {
 }
 
 message LeaveRequest {
-  // The server identifies the participant
-  // through the established connection.
 }
 
 message ServerEvent {
+  oneof event {
+    JoinConfirmation join_confirmation = 1;
+    Broadcast broadcast = 2;
+    ErrorResponse error = 3;
+  }
+}
+
+message JoinConfirmation {
+  string participant_id = 1;
+  string display_name = 2;
+}
+
+message Broadcast {
   string content = 1;
   int64 logical_timestamp = 2;
   string participant_id = 3;
+  string display_name = 4;
+  EventType event_type = 5;
+}
 
-  EventType event_type = 4;
+message ErrorResponse {
+  string message = 1;
 }
 
 enum EventType {
@@ -46,6 +61,7 @@ enum EventType {
   EVENT_TYPE_LEAVE = 3;
 }
 
+
 // INFO:
 
 // Connect	Opens a long-lived, two-way stream for each client.
@@ -54,7 +70,15 @@ enum EventType {
 
 // oneof request	Prevents a single request from containing multiple actions simultaneously.
 
+// oneof event    ensures each server event contains one of those three event types.
+
 // ServerEvent	Represents a broadcast event sent from the server to clients.
+
+// JoinConfirmation    tells a client its assigned ID, for example client-1.
+
+// Broadcast           carries the message, the Lamport timestamp, and the participant's identity.
+
+// ErrorResponse gives the server a way to report invalid requests, such as messages exceeding the 128-character limit.
 
 // logical_timestamp	Carries the server-assigned Lamport timestamp.
 
