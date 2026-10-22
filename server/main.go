@@ -11,6 +11,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"syscall"
+	"unicode/utf8"
 
 	pb "chitchat/grpc"
 
@@ -56,6 +57,39 @@ func (s *chatServer) tick() uint64 {
 
 	s.logicalClock++
 	return s.logicalClock
+}
+
+func validateChatContent(content string) string {
+    if !utf8.ValidString(content) {
+        return "message must be valid UTF-8"
+    }
+
+    if content == "" {
+        return "message cannot be empty"
+    }
+
+    if utf8.RuneCountInString(content) > 128 {
+        return "message must be at most 128 characters"
+    }
+
+    return ""
+}
+
+func enqueueError(p *participant, message string) bool {
+	event := &pb.ServerEvent{
+		Event: &pb.ServerEvent_Error{
+			Error: &pb.ErrorResponse{
+				Message: message,
+			},
+		},
+	}
+
+	select {
+	case p.outgoing <- event:
+		return true
+	default:
+		return false
+	}
 }
 
 func (s *chatServer) Connect(
@@ -149,6 +183,10 @@ func (s *chatServer) Connect(
 		req, err := stream.Recv()
 
 		if err == io.EOF {
+			s.mu.Lock()
+			delete(s.participants, id)
+			s.mu.Unlock()
+			
 			s.logger.Printf("event=client_disconnected client_id=%s", id)
 			return nil
 		}
@@ -194,21 +232,61 @@ func (s *chatServer) Connect(
 			)
 			return nil
 
-		case req.GetPublish() != nil:
-			// Publishing will be implemented in a later step.
-			err := stream.Send(&pb.ServerEvent{
-				Event: &pb.ServerEvent_Error{
-					Error: &pb.ErrorResponse{
-						Message: "publishing is not implemented yet",
-					},
-				},
-			})
-			if err != nil {
-				return err
-			}
+case req.GetPublish() != nil:
+    content := req.GetPublish().GetContent()
 
+    if validationError := validateChatContent(content); validationError != "" {
+        if !enqueueError(p, validationError) {
+            return status.Error(
+                codes.ResourceExhausted,
+                "client outgoing queue is full",
+            )
+        }
+
+        s.logger.Printf(
+            "event=publish_rejected client_id=%s reason=%q",
+            id,
+            validationError,
+        )
+        continue
+    }
+
+    s.mu.Lock()
+    s.logicalClock++
+    messageTime := s.logicalClock
+
+    messageEvent := &pb.ServerEvent{
+        Event: &pb.ServerEvent_Broadcast{
+            Broadcast: &pb.Broadcast{
+                Content:          content,
+                LogicalTimestamp: int64(messageTime),
+                ParticipantId:    id,
+                DisplayName:      displayName,
+                EventType:        pb.EventType_EVENT_TYPE_CHAT,
+            },
+        },
+    }
+
+    for _, recipient := range s.participants {
+        select {
+        case recipient.outgoing <- messageEvent:
+        default:
+            s.logger.Printf(
+                "event=broadcast_queue_full client_id=%s logical_timestamp=%d",
+                recipient.id,
+                messageTime,
+            )
+        }
+    }
+
+    s.mu.Unlock()
+
+    s.logger.Printf(
+        "event=message_broadcast client_id=%s logical_timestamp=%d",
+        id,
+        messageTime,
+    )
 		case req.GetJoin() != nil:
-			// A connection can only join once.
 			err := stream.Send(&pb.ServerEvent{
 				Event: &pb.ServerEvent_Error{
 					Error: &pb.ErrorResponse{

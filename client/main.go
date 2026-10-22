@@ -91,6 +91,7 @@ func main() {
 
 	fmt.Println("Type /leave to leave Chit Chat.")
 
+
 	go func() {
 		for {
 			input, err := reader.ReadString('\n')
@@ -98,9 +99,13 @@ func main() {
 				return
 			}
 
-			command := strings.TrimSpace(input)
+			message := strings.TrimSpace(input)
 
-			if command == "/leave" {
+			if message == "" {
+				continue
+			}
+
+			if message == "/leave" {
 				err := stream.Send(&pb.ClientRequest{
 					Request: &pb.ClientRequest_Leave{
 						Leave: &pb.LeaveRequest{},
@@ -115,9 +120,28 @@ func main() {
 				return
 			}
 
-			fmt.Println("Chat publishing isn't implemented yet. Type /leave to exit.")
+			err = stream.Send(&pb.ClientRequest{
+				Request: &pb.ClientRequest_Publish{
+					Publish: &pb.PublishRequest{
+						Content: message,
+					},
+				},
+			})
+			if err != nil {
+				logger.Printf(
+					"event=publish_failed client_id=%s error=%v",
+					clientID, err,
+				)
+				return
+			}
+
+			logger.Printf(
+				"event=message_sent client_id=%s content=%q",
+				clientID, message,
+			)
 		}
 	}()
+
 
 	// Keep receiving server events.
 	for {
