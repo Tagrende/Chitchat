@@ -1,0 +1,108 @@
+Server Log:
+component=Server 2026/10/25 23:49:02 event=server_started address=[::]:50051
+component=Server 2026/10/25 23:49:17 event=client_connected client_id=client-1 display_name="Alice"
+component=Server 2026/10/25 23:49:17 event=join_confirmed client_id=client-1
+component=Server 2026/10/25 23:49:17 event=join_broadcast client_id=client-1 logical_timestamp=1
+component=Server 2026/10/25 23:49:17 event=message_delivered client_id=client-1
+component=Server 2026/10/25 23:49:38 event=client_connected client_id=client-2 display_name="Bob"
+component=Server 2026/10/25 23:49:38 event=join_confirmed client_id=client-2
+component=Server 2026/10/25 23:49:38 event=join_broadcast client_id=client-2 logical_timestamp=2
+component=Server 2026/10/25 23:49:38 event=message_delivered client_id=client-1
+component=Server 2026/10/25 23:49:38 event=message_delivered client_id=client-2
+component=Server 2026/10/25 23:49:58 event=client_connected client_id=client-3 display_name="Charlie"
+component=Server 2026/10/25 23:49:58 event=join_confirmed client_id=client-3
+component=Server 2026/10/25 23:49:58 event=join_broadcast client_id=client-3 logical_timestamp=3
+component=Server 2026/10/25 23:49:58 event=message_delivered client_id=client-2
+component=Server 2026/10/25 23:49:58 event=message_delivered client_id=client-1
+component=Server 2026/10/25 23:49:58 event=message_delivered client_id=client-3
+component=Server 2026/10/25 23:51:46 event=message_broadcast client_id=client-1 logical_timestamp=4
+component=Server 2026/10/25 23:51:46 event=message_delivered client_id=client-3
+component=Server 2026/10/25 23:51:46 event=message_delivered client_id=client-1
+component=Server 2026/10/25 23:51:46 event=message_delivered client_id=client-2
+component=Server 2026/10/25 23:52:38 event=message_broadcast client_id=client-2 logical_timestamp=5
+component=Server 2026/10/25 23:52:38 event=message_delivered client_id=client-1
+component=Server 2026/10/25 23:52:38 event=message_delivered client_id=client-2
+component=Server 2026/10/25 23:52:38 event=message_delivered client_id=client-3
+component=Server 2026/10/25 23:52:52 event=message_broadcast client_id=client-3 logical_timestamp=6
+component=Server 2026/10/25 23:52:52 event=message_delivered client_id=client-1
+component=Server 2026/10/25 23:52:52 event=message_delivered client_id=client-2
+component=Server 2026/10/25 23:52:52 event=message_delivered client_id=client-3
+component=Server 2026/10/25 23:53:14 event=leave_broadcast client_id=client-2 logical_timestamp=7
+component=Server 2026/10/25 23:53:14 event=message_delivered client_id=client-1
+component=Server 2026/10/25 23:53:14 event=message_delivered client_id=client-3
+component=Server 2026/10/25 23:53:51 event=message_broadcast client_id=client-3 logical_timestamp=8
+component=Server 2026/10/25 23:53:51 event=message_delivered client_id=client-1
+component=Server 2026/10/25 23:53:51 event=message_delivered client_id=client-3
+
+
+Client Alice log:
+component=Client 2026/10/25 23:49:17 event=joined client_id=client-1 display_name="Alice"
+
+Welcome, Alice! Your assigned ID is client-1.
+You are connected. Press Ctrl+C to exit.
+Type /leave to leave Chit Chat.
+[1] Alice: Participant Alice joined Chit Chat at logical time 1
+component=Client 2026/10/25 23:49:17 event=message_received client_id=client-1 logical_timestamp=1 content="Participant Alice joined Chit Chat at logical time 1"
+[2] Bob: Participant Bob joined Chit Chat at logical time 2
+Alicecomponent=Client 2026/10/25 23:51:10 event=message_received client_id=client-1 logical_timestamp=2 content="Participant Bob joined Chit Chat at logical time 2"
+[3] Charlie: Participant Charlie joined Chit Chat at logical time 3
+component=Client 2026/10/25 23:51:10 event=message_received client_id=client-1 logical_timestamp=3 content="Participant Charlie joined Chit Chat at logical time 3"
+Hello everyone!!!
+component=Client 2026/10/25 23:51:46 event=message_sent client_id=client-1 content="AliceHello everyone!!!"
+[4] Alice: AliceHello everyone!!!
+component=Client 2026/10/25 23:51:46 event=message_received client_id=client-1 logical_timestamp=4 content="AliceHello everyone!!!"
+[5] Bob: BobHI!!!!
+component=Client 2026/10/25 23:52:38 event=message_received client_id=client-1 logical_timestamp=5 content="BobHI!!!!"
+[6] Charlie: CharlieHello!
+component=Client 2026/10/25 23:52:52 event=message_received client_id=client-1 logical_timestamp=6 content="CharlieHello!"
+[7] Bob: Participant Bob left Chit Chat at logical time 7
+component=Client 2026/10/25 23:53:14 event=message_received client_id=client-1 logical_timestamp=7 content="Participant Bob left Chit Chat at logical time 7"
+[8] Charlie: oh no he left
+component=Client 2026/10/25 23:53:51 event=message_received client_id=client-1 logical_timestamp=8 content="oh no he left"
+
+Client Bob log:
+component=Client 2026/10/25 23:49:17 event=joined client_id=client-1 display_name="Alice"
+
+Welcome, Alice! Your assigned ID is client-1.
+You are connected. Press Ctrl+C to exit.
+Type /leave to leave Chit Chat.
+[1] Alice: Participant Alice joined Chit Chat at logical time 1
+component=Client 2026/10/25 23:49:17 event=message_received client_id=client-1 logical_timestamp=1 content="Participant Alice joined Chit Chat at logical time 1"
+[2] Bob: Participant Bob joined Chit Chat at logical time 2
+Alicecomponent=Client 2026/10/25 23:51:10 event=message_received client_id=client-1 logical_timestamp=2 content="Participant Bob joined Chit Chat at logical time 2"
+[3] Charlie: Participant Charlie joined Chit Chat at logical time 3
+component=Client 2026/10/25 23:51:10 event=message_received client_id=client-1 logical_timestamp=3 content="Participant Charlie joined Chit Chat at logical time 3"
+Hello everyone!!!
+component=Client 2026/10/25 23:51:46 event=message_sent client_id=client-1 content="AliceHello everyone!!!"
+[4] Alice: AliceHello everyone!!!
+component=Client 2026/10/25 23:51:46 event=message_received client_id=client-1 logical_timestamp=4 content="AliceHello everyone!!!"
+[5] Bob: BobHI!!!!
+component=Client 2026/10/25 23:52:38 event=message_received client_id=client-1 logical_timestamp=5 content="BobHI!!!!"
+[6] Charlie: CharlieHello!
+component=Client 2026/10/25 23:52:52 event=message_received client_id=client-1 logical_timestamp=6 content="CharlieHello!"
+[7] Bob: Participant Bob left Chit Chat at logical time 7
+component=Client 2026/10/25 23:53:14 event=message_received client_id=client-1 logical_timestamp=7 content="Participant Bob left Chit Chat at logical time 7"
+[8] Charlie: oh no he left
+component=Client 2026/10/25 23:53:51 event=message_received client_id=client-1 logical_timestamp=8 content="oh no he left"
+
+Client Charlie log:
+component=Client 2026/10/25 23:49:58 event=joined client_id=client-3 display_name="Charlie"
+
+Welcome, Charlie! Your assigned ID is client-3.
+You are connected. Press Ctrl+C to exit.
+Type /leave to leave Chit Chat.
+[3] Charlie: Participant Charlie joined Chit Chat at logical time 3
+component=Client 2026/10/25 23:49:58 event=message_received client_id=client-3 logical_timestamp=3 content="Participant Charlie joined Chit Chat at logical time 3"
+Charlie[4] Alice: AliceHello everyone!!!
+component=Client 2026/10/25 23:51:46 event=message_received client_id=client-3 logical_timestamp=4 content="AliceHello everyone!!!"
+[5] Bob: BobHI!!!!
+component=Client 2026/10/25 23:52:38 event=message_received client_id=client-3 logical_timestamp=5 content="BobHI!!!!"
+Hello!
+component=Client 2026/10/25 23:52:52 event=message_sent client_id=client-3 content="CharlieHello!"
+[6] Charlie: CharlieHello!
+component=Client 2026/10/25 23:52:52 event=message_received client_id=client-3 logical_timestamp=6 content="CharlieHello!"
+[7] Bob: Participant Bob left Chit Chat at logical time 7
+Ocomponent=Client 2026/10/25 23:53:34 event=message_received client_id=client-3 logical_timestamp=7 content="Participant Bob left Chit Chat at logical time 7"                                                                                 oh no he left
+component=Client 2026/10/25 23:53:51 event=message_sent client_id=client-3 content="oh no he left"
+[8] Charlie: oh no he left
+component=Client 2026/10/25 23:53:51 event=message_received client_id=client-3 logical_timestamp=8 content="oh no he left"
