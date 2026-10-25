@@ -106,6 +106,12 @@ func main() {
 			}
 
 			if message == "/leave" {
+				
+				logger.Printf(
+     			   "event=leave_requested client_id=%s",
+        			clientID,
+    			)
+				
 				err := stream.Send(&pb.ClientRequest{
 					Request: &pb.ClientRequest_Leave{
 						Leave: &pb.LeaveRequest{},

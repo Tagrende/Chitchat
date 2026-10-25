@@ -60,19 +60,19 @@ func (s *chatServer) tick() uint64 {
 }
 
 func validateChatContent(content string) string {
-    if !utf8.ValidString(content) {
-        return "message must be valid UTF-8"
-    }
+	if !utf8.ValidString(content) {
+		return "message must be valid UTF-8"
+	}
 
-    if content == "" {
-        return "message cannot be empty"
-    }
+	if content == "" {
+		return "message cannot be empty"
+	}
 
-    if utf8.RuneCountInString(content) > 128 {
-        return "message must be at most 128 characters"
-    }
+	if utf8.RuneCountInString(content) > 128 {
+		return "message must be at most 128 characters"
+	}
 
-    return ""
+	return ""
 }
 
 func enqueueError(p *participant, message string) bool {
@@ -175,6 +175,10 @@ func (s *chatServer) Connect(
 				)
 				return
 			}
+			s.logger.Printf(
+				"event=message_delivered client_id=%s",
+				id,
+			)
 		}
 	}()
 
@@ -186,7 +190,7 @@ func (s *chatServer) Connect(
 			s.mu.Lock()
 			delete(s.participants, id)
 			s.mu.Unlock()
-			
+
 			s.logger.Printf("event=client_disconnected client_id=%s", id)
 			return nil
 		}
@@ -225,6 +229,8 @@ func (s *chatServer) Connect(
 
 			s.broadcast(leaveEvent)
 
+			close(p.outgoing)
+
 			s.logger.Printf(
 				"event=leave_broadcast client_id=%s logical_timestamp=%d",
 				id,
@@ -232,60 +238,60 @@ func (s *chatServer) Connect(
 			)
 			return nil
 
-case req.GetPublish() != nil:
-    content := req.GetPublish().GetContent()
+		case req.GetPublish() != nil:
+			content := req.GetPublish().GetContent()
 
-    if validationError := validateChatContent(content); validationError != "" {
-        if !enqueueError(p, validationError) {
-            return status.Error(
-                codes.ResourceExhausted,
-                "client outgoing queue is full",
-            )
-        }
+			if validationError := validateChatContent(content); validationError != "" {
+				if !enqueueError(p, validationError) {
+					return status.Error(
+						codes.ResourceExhausted,
+						"client outgoing queue is full",
+					)
+				}
 
-        s.logger.Printf(
-            "event=publish_rejected client_id=%s reason=%q",
-            id,
-            validationError,
-        )
-        continue
-    }
+				s.logger.Printf(
+					"event=publish_rejected client_id=%s reason=%q",
+					id,
+					validationError,
+				)
+				continue
+			}
 
-    s.mu.Lock()
-    s.logicalClock++
-    messageTime := s.logicalClock
+			s.mu.Lock()
+			s.logicalClock++
+			messageTime := s.logicalClock
 
-    messageEvent := &pb.ServerEvent{
-        Event: &pb.ServerEvent_Broadcast{
-            Broadcast: &pb.Broadcast{
-                Content:          content,
-                LogicalTimestamp: int64(messageTime),
-                ParticipantId:    id,
-                DisplayName:      displayName,
-                EventType:        pb.EventType_EVENT_TYPE_CHAT,
-            },
-        },
-    }
+			messageEvent := &pb.ServerEvent{
+				Event: &pb.ServerEvent_Broadcast{
+					Broadcast: &pb.Broadcast{
+						Content:          content,
+						LogicalTimestamp: int64(messageTime),
+						ParticipantId:    id,
+						DisplayName:      displayName,
+						EventType:        pb.EventType_EVENT_TYPE_CHAT,
+					},
+				},
+			}
 
-    for _, recipient := range s.participants {
-        select {
-        case recipient.outgoing <- messageEvent:
-        default:
-            s.logger.Printf(
-                "event=broadcast_queue_full client_id=%s logical_timestamp=%d",
-                recipient.id,
-                messageTime,
-            )
-        }
-    }
+			for _, recipient := range s.participants {
+				select {
+				case recipient.outgoing <- messageEvent:
+				default:
+					s.logger.Printf(
+						"event=broadcast_queue_full client_id=%s logical_timestamp=%d",
+						recipient.id,
+						messageTime,
+					)
+				}
+			}
 
-    s.mu.Unlock()
+			s.mu.Unlock()
 
-    s.logger.Printf(
-        "event=message_broadcast client_id=%s logical_timestamp=%d",
-        id,
-        messageTime,
-    )
+			s.logger.Printf(
+				"event=message_broadcast client_id=%s logical_timestamp=%d",
+				id,
+				messageTime,
+			)
 		case req.GetJoin() != nil:
 			err := stream.Send(&pb.ServerEvent{
 				Event: &pb.ServerEvent_Error{
